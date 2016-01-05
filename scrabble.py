@@ -21,6 +21,7 @@ rack_index=-1
 
 board_tiles=[[-1 for x in range(TOTAL_COLUMNS)] for x in range(TOTAL_ROWS)]		#board_tiles[row][column]
 board_letters=[[' ' for x in range(TOTAL_COLUMNS)] for x in range(TOTAL_ROWS)]	#'a' for not selected, CAPS letters otherwise
+locked_letters=[[0 for x in range(TOTAL_COLUMNS)] for x in range(TOTAL_ROWS)]	# 0-empty , 1-locked , 2-unlocked(filling)
 
 def findRackTile(widget):				#from Click
 	for x in range(len(p1_tiles)):
@@ -40,12 +41,6 @@ def removeFromArray(i):					#when Rack tile is used
 	for x in range(i,len(p1_tiles)-1):
 		p1_tiles[x]=p1_tiles[x+1]
 	del p1_tiles[-1]
-
-def makeWords():
-	rows = (''.join(row) for row in board_letters)
-	columns = (''.join(column) for column in zip(*board_letters))
-	words = [word for line in itertools.chain(rows,columns) for word in line.split() if len(word) > 1]
-	print words
 
 def rack_callback(event):
 	global rack_index
@@ -73,7 +68,6 @@ def board_callback(event):
 			board_letters[r][c]=selected
 			selected='a'
 			removeFromArray(rack_index)
-			fillPlayerTiles()
 			showPlayerTiles()
 			makeWords()
 
@@ -122,6 +116,30 @@ def showPlayerTiles():
 		p1_tiles[x].pack(side="left",padx=5)
 		p1_tiles[x].bind("<Button-1>",rack_callback)
 
+def makeWords():
+	rows = (''.join(row) for row in board_letters)
+	columns = (''.join(column) for column in zip(*board_letters))
+	words = [word for line in itertools.chain(rows,columns) for word in line.split() if len(word) > 1]
+	print words
+
+def checkWords():
+	return True
+
+def lockBoard():
+	global board_tiles,locked_letters
+	for x in range(TOTAL_COLUMNS):
+		for y in range(TOTAL_ROWS):
+			if(board_letters[y][x]!=' '):
+				locked_letters[y][x]=1
+				board_tiles[y][x]["bg"]="green"
+
+def submit():
+	if(checkWords()):
+		lockBoard()
+		fillPlayerTiles()
+		showPlayerTiles()
+
+
 if __name__=="__main__":
 	window = Tk()
 	window.title("SCRABBLE")
@@ -130,7 +148,13 @@ if __name__=="__main__":
 	board_frame.pack()
 
 	rack_frame = Frame(window,height=TILE_HEIGHT,width=7*TILE_WIDTH)
-	rack_frame.pack(pady=10)
+	rack_frame.pack(padx=50,pady=10,side="left")
+	
+	score_frame = Frame(window,height=TILE_HEIGHT)
+	score_frame.pack(padx=50,pady=10,side="left")
+	submit_button = Button(score_frame,text="SUBMIT!",command=submit)
+	submit_button.pack()
+
 	fillPlayerTiles()
 	showPlayerTiles()
 
